@@ -4,7 +4,7 @@
 IP=$(ipconfig getifaddr en0)
 X11_PORT=0
 HOST_PATH=~/Repositories/cs772-iitb
-DOCKER_IMAGE=rohankalbag/tsetlin:latest
+DOCKER_IMAGE=ubuntu:latest
 
 echo "Running docker container"
 echo "HOST_IP: "$IP":"$X11_PORT
