@@ -1,2 +1,8 @@
 numpy
 ipykernel
+math
+numpy
+random
+torch
+matplotlib.pyplot
+os
