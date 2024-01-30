@@ -1,7 +1,7 @@
 # to enable this script : chmod +x setup.sh
 # usage : source setup.sh
 
-PY_ENV_NAME="assg1"
+PY_ENV_NAME=".venv"
 
 if [ -d $PY_ENV_NAME ]; then
     echo "Python environment exists."
