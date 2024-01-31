@@ -219,3 +219,36 @@ class PalindromeDataset:
         random.shuffle(dataset)
 
         return dataset
+
+
+class PalindromeDatasetFull:
+
+    def __init__(self, bit_length):
+        assert bit_length % 2 == 0, "bit length must be even"
+        self.bit_length = bit_length
+
+    def dec2bin(self, number):
+        ans = ""
+        if ( number == 0 ):
+            return '0'*self.bit_length
+        while ( number ):
+            ans += str(number&1)
+            number = number >> 1
+        
+        ans = ans[::-1]
+
+        if len(ans) < self.bit_length : ans = '0'*(self.bit_length-len(ans)) + ans
+        return ans 
+
+    def check_palindrome(self, input) :
+        return input == input[::-1]
+
+    def generate_dataset(self):
+        total = 2**self.bit_length
+        dataset = []
+        for num in range(total) :
+            data = self.dec2bin(num)
+            label = 1*self.check_palindrome(data)
+            dataset.append((data, label))
+        
+        return dataset
