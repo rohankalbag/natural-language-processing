@@ -1,6 +1,6 @@
 import math
 import random
-
+import numpy as np
 
 class Value:  # creating a new "datatype" for ease in understanding
     def __init__(self, data=0, _children=(), _op='', label=''):
@@ -77,6 +77,17 @@ class Value:  # creating a new "datatype" for ease in understanding
         out._backward = _backward
         return out
 
+    def log(self) :
+        x = self.data
+        assert x != 0
+        val = np.log(x)
+        out = Value(val, (self,), 'log')
+
+        def _backward() :
+            self.grad = (1/x) * out.grad
+        out._backward = _backward
+        return out
+
     def relu(self):
         x = self.data
         t = x*int(x > 0)
@@ -143,7 +154,7 @@ class Neuron(Module):
     def __call__(self, x):
         # wx + b
         act = sum((wi*xi for wi, xi in zip(self.w, x)), self.b)
-        return act.tanh()  # only returns tanh activation for now
+        return act.sigmoid()  # only returns tanh activation for now
 
     def parameters(self):  # giving out list of all params
         return self.w + [self.b]  # array of ndim+1 weights
