@@ -84,7 +84,7 @@ class Value:  # creating a new "datatype" for ease in understanding
         out = Value(val, (self,), 'log')
 
         def _backward() :
-            self.grad = (1/x) * out.grad
+            self.grad += (1/x) * out.grad
         out._backward = _backward
         return out
 
@@ -154,7 +154,7 @@ class Neuron(Module):
     def __call__(self, x):
         # wx + b
         act = sum((wi*xi for wi, xi in zip(self.w, x)), self.b)
-        return act.sigmoid()  # only returns tanh activation for now
+        return act.sigmoid()  # only returns sigmoid activation for now
 
     def parameters(self):  # giving out list of all params
         return self.w + [self.b]  # array of ndim+1 weights
@@ -234,9 +234,10 @@ class PalindromeDataset:
 
 class PalindromeDatasetFull:
 
-    def __init__(self, bit_length):
+    def __init__(self, bit_length, balanced=False):
         assert bit_length % 2 == 0, "bit length must be even"
         self.bit_length = bit_length
+        self.balanced = balanced
 
     def dec2bin(self, number):
         ans = ""
@@ -257,9 +258,29 @@ class PalindromeDatasetFull:
     def generate_dataset(self):
         total = 2**self.bit_length
         dataset = []
-        for num in range(total) :
-            data = self.dec2bin(num)
-            label = 1*self.check_palindrome(data)
-            dataset.append((data, label))
-        
-        return dataset
+        if not self.balanced : 
+            for num in range(total) :
+                data = self.dec2bin(num)
+                label = 1*self.check_palindrome(data)
+                dataset.append((data, label))
+            
+            return dataset
+        else :
+            npal, pal = 0, 0
+            total_palindromes = 2**(self.bit_length//2)
+            for num in range(total) :
+                data = self.dec2bin(num)
+                label = 1*self.check_palindrome(data)
+                if label==0 : 
+                    if npal<total_palindromes : 
+                        npal += 1
+                        dataset.append((data, label))
+                else : 
+                    if pal<total_palindromes : 
+                        pal += 1
+                        dataset.append((data, label))
+                if npal==total_palindromes and pal==total_palindromes : 
+                    return dataset
+            return dataset
+
+                
