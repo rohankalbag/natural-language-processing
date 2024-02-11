@@ -181,6 +181,10 @@ class MLP(Module):
         for layer in self.layers:
             x = layer(x)
         return x
+    def hidden_layer_act(self,x):
+        layer = self.layers[0]
+        y = layer(x)
+        return y
 
     def parameters(self):
         return [p for layer in self.layers for p in layer.parameters()]
