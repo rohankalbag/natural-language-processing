@@ -21,7 +21,10 @@ The training loop of the main model can be found in `Palindrome.ipynb`, and the 
 The link to a video demonstration can be found at  
 [https://drive.google.com/file/d/1SI80BsDE57TNi9EU7wq3O5zObbCd66oi/view?usp=sharing](https://drive.google.com/file/d/1SI80BsDE57TNi9EU7wq3O5zObbCd66oi/view?usp=sharing)  
 
-A project by :-
+The link to Presentation:
+https://iitbacin-my.sharepoint.com/:p:/g/personal/20d070009_iitb_ac_in/Ed42xKhq-sBHoZS2q4b3x7oB5S2IMFNtBngbEENjxbB4nQ?rtime=tKVbgSoz3Eg
+
+A project by:-
 
 1) Aziz Shameem : 20d070020  
 2) Rohan Rajesh Kalbag : 20d170033  
