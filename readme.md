@@ -2,12 +2,12 @@
 
 This is our attempt at the first assignment of the course CS772.  
 
-To install all dependencies 
+To install all dependencies  
 ```pip install -r requirements.txt```
 
 The learned weights of the final model are loaded in the form of a list (49 wts) in the UI. They can be found in `model_wts.pkl`
 
-To boot up the User Interface for model inference 
+To boot up the User Interface for model inference    
 ```python ui.py```
 ```python3 ui.py```
 
