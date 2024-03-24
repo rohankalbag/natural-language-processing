@@ -3,6 +3,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
+import tqdm
+import json
+from copy import deepcopy
+
+def read_from_jsonl(file_path):
+    with open(file_path, "r") as f:
+        data = f.readlines()
+    return [json.loads(line) for line in data]
 
 class RecurrentPerceptron :
     '''
@@ -61,16 +69,30 @@ class RecurrentPerceptron :
         self.W -= lr*dw
         self.V -= lr*dv
         
-    def train_step(self, x, y, lr) :
+    def train_step(self, x, y, lr, debug=False) :
         # x : (time, input_size)
         # y : (time,)
         h, out = self.forward(x)
         eps = 1e-4 # for numerical stability
-        loss = F.binary_cross_entropy(torch.tensor(list(out.values())).float().clamp(eps, 1-eps), y)
+        y_p = torch.tensor(list(out.values())).float().clamp(eps, 1-eps)
+        y = torch.tensor(y).float()
+        loss = F.binary_cross_entropy(y_p, y)
+        if debug:
+            print("DEBUG LOGS FOR STEP")
+            print("--"*30)
+            print("x_shape", x.shape)
+            print("y_shape", y.shape)
+            print("y_p shape", y_p.shape)
+            print("y shape", y.shape)
+            print("y", y)
+            print("y_p", y_p)
+            print(f'{loss=}, output : {list(out.values())[-1].unsqueeze(0).float()}')
+            print("--"*30)
         if self.verbose : print(f'{loss=}, output : {list(out.values())[-1].unsqueeze(0).float()}')
         self.losslog.append(loss)
         dw, dv = self.backward(x, h, out, y)
         self.update_model(dw, dv, lr)
+        return loss
 
     def train_epoch(self, xs, ys, lr) :
         # xs : (num_data_points, time, input_size) 
@@ -84,8 +106,80 @@ class RecurrentPerceptron :
         self.losslog = []
         for _ in range(nepochs) :
             self.train_epoch(xs, ys, lr)
+        
+    def train_from_dataloader(self, dataloader, lr, nepochs=10, debug=False) :
+        self.losslog = []
+        for _ in tqdm.tqdm(range(nepochs)) :
+            avg_loss = 0
+            for d in dataloader :
+                for b in d:
+                    x = b["pos_tags"]
+                    y = b["chunk_tags"]
+                    avg_loss += self.train_step(x, y, lr, debug=debug)
+            avg_loss /= len(dataloader)
+            print(f'Epoch {_} : Avg Loss : {avg_loss}')
+        return self.losslog
 
     def infer(self, x, thresh=0.5) :
         # x : (time, input_size)
         return 1*(torch.tensor(list(self(x)[1].values())) >= thresh)
+
+
+class DataLoader:
+    def __init__(self, data, batch_size=32):
+        self.batch_size = batch_size
+        self.data = data
+        self.encoded_data = deepcopy(data)
+        self.batch_size = batch_size
+        self.pointer = 0
+        self.data_size = len(data)
         
+        self.curr_one_hot_encoding_mapping = {
+            1: [1, 0, 0, 0],
+            2: [0, 1, 0, 0],
+            3: [0, 0, 1, 0],
+            4: [0, 0, 0, 1]
+        }
+        self.prev_one_hot_encoding_mapping = {
+            # 0 for start of string sequence
+            0: [1, 0, 0, 0, 0],
+            1: [0, 1, 0, 0, 0],
+            2: [0, 0, 1, 0, 0],
+            3: [0, 0, 0, 1, 0],
+            4: [0, 0, 0, 0, 1]
+        }
+
+        self.preprocess()
+    
+    def preprocess(self):
+        for i, d in enumerate(self.data):
+            for j, pos in enumerate(d["pos_tags"]):
+                if j == 0:
+                    prev = self.prev_one_hot_encoding_mapping[0]
+                    curr = self.curr_one_hot_encoding_mapping[pos]
+                else:
+                    prev = self.prev_one_hot_encoding_mapping[d["pos_tags"][j-1]]
+                    curr = self.curr_one_hot_encoding_mapping[pos]
+                
+                self.encoded_data[i]["pos_tags"][j] = np.array(prev + curr)
+        
+        for i in self.encoded_data:
+            chunk_tags = np.array(i["chunk_tags"])
+            i["chunk_tags"] = chunk_tags
+            pos_tags = np.array(i["pos_tags"])
+            pos_tags.reshape(1, pos_tags.shape[0], pos_tags.shape[1])
+            i["pos_tags"] = pos_tags
+        
+    def __iter__(self):
+        self.pointer = 0
+        return self
+    
+    def __next__(self):
+        if self.pointer >= self.data_size:
+            self.pointer = 0
+            raise StopIteration
+        
+        batch = self.encoded_data[self.pointer:self.pointer+self.batch_size]
+        self.pointer += self.batch_size
+        
+        return batch
