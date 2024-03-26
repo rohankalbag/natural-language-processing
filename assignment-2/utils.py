@@ -1,9 +1,11 @@
+import os, time
+import pickle
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
-import tqdm
+from tqdm.notebook import tqdm
 import json
 from copy import deepcopy
 
@@ -22,7 +24,7 @@ class RecurrentPerceptron :
 
     As of now, this unit uses sigmoid as activation and binary cross-entropy as the loss
     '''
-    def __init__(self, input_size=9, seq_length=-1, clip_grads=False, verbose=False) :
+    def __init__(self, input_size=9, seq_length=-1, clip_grads=False, clip=5., verbose=False) :
         '''
         input_size(default:9) : dimension of the one-hot input vector == number of inputs to the neuron
         seq_length(default:-1) : number of time steps for BPTT. Pass -1 to consider all the entire time history
@@ -31,6 +33,7 @@ class RecurrentPerceptron :
         self.input_size = input_size # number of inputs to the neuron
         self.seq_length = seq_length # number of time steps to backprop through
         self.clip_grads = clip_grads
+        self.clip = clip
         self.verbose = verbose
         
         self.W = torch.randn((input_size,)) # weights for the inputs
@@ -59,9 +62,9 @@ class RecurrentPerceptron :
             dv += da*h[t-1]
             dhnext = self.V*da
             if self.clip_grads : 
-                dw = dw.clamp(-5., 5.) 
-                dv = dv.clamp(-5., 5.)
-                dh = dh.clamp(-5., 5.)
+                dw = dw.clamp(-self.clip, self.clip) 
+                dv = dv.clamp(-self.clip, self.clip)
+                dh = dh.clamp(-self.clip, self.clip)
         return dw, dv
     
     def update_model(self, dw, dv, lr) :
@@ -89,7 +92,7 @@ class RecurrentPerceptron :
             print(f'{loss=}, output : {list(out.values())[-1].unsqueeze(0).float()}')
             print("--"*30)
         if self.verbose : print(f'{loss=}, output : {list(out.values())[-1].unsqueeze(0).float()}')
-        self.losslog.append(loss)
+        # self.losslog.append(loss)
         dw, dv = self.backward(x, h, out, y)
         self.update_model(dw, dv, lr)
         return loss
@@ -107,22 +110,54 @@ class RecurrentPerceptron :
         for _ in range(nepochs) :
             self.train_epoch(xs, ys, lr)
         
-    def train_from_dataloader(self, dataloader, lr, nepochs=10, debug=False) :
+    def train_from_dataloader(self, dataloader, lr, nepochs=11, debug=False, print_interval=1) :
         self.losslog = []
-        for _ in tqdm.tqdm(range(nepochs)) :
+        for i in tqdm(range(nepochs)) :
             avg_loss = 0
             for d in dataloader :
                 for b in d:
                     x = b["pos_tags"]
                     y = b["chunk_tags"]
                     avg_loss += self.train_step(x, y, lr, debug=debug)
+            self.losslog.append(avg_loss.item())
             avg_loss /= len(dataloader)
-            print(f'Epoch {_} : Avg Loss : {avg_loss}')
-        return self.losslog
+            if i%print_interval==0 : tqdm.write(f'Epoch {i} : Avg Loss : {avg_loss}')
+        tqdm.write(f'Epoch {nepochs} : Avg Loss : {avg_loss}')
+        # return self.losslog
 
     def infer(self, x, thresh=0.5) :
         # x : (time, input_size)
         return 1*(torch.tensor(list(self(x)[1].values())) >= thresh)
+
+    def save_model(self, path='', name='model.pkl') :
+        if name[-4:]!='.pkl' : name += '.pkl'
+        save_dir = os.path.join(path, name)
+        if os.path.exists(save_dir) : 
+            print('File already exists, overwriting')
+            time.sleep(3)
+            os.remove(save_dir)
+        with open(save_dir, 'wb') as f :
+            pickle.dump(self.W, f)
+            pickle.dump(self.V, f)
+
+    def load_model(self, path='') :
+        if not os.path.exists(path) :
+            print("Model Path Incorrect")
+        else :
+            with open(path, 'rb') as f :
+                self.W = pickle.load(f)
+                self.V = pickle.load(f)
+    
+    def load_weights(self, path) :
+        if not os.path.exists(path) :
+            print("Model Path Incorrect")
+            return 
+        with open(path, 'rb') as f :
+            w = pickle.load(f)
+            v = pickle.load(f)
+        return w, v
+            
+
 
 
 class DataLoader:
@@ -183,3 +218,6 @@ class DataLoader:
         self.pointer += self.batch_size
         
         return batch
+
+    def __len__(self) :
+        return len(self.data)
