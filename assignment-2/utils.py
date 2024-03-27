@@ -125,6 +125,18 @@ class RecurrentPerceptron :
         tqdm.write(f'Epoch {nepochs} : Avg Loss : {avg_loss}')
         # return self.losslog
 
+    def test_from_dataloader(self, dataloader, verbose=True) :
+        num_cor = 0
+        total = 0
+        for d in tqdm(dataloader, disable=not verbose) :
+            for b in d:
+                x = b["pos_tags"]
+                y = b["chunk_tags"]
+                op = self.infer(x)
+                num_cor += sum(torch.tensor(y)==op)
+                total += len(y)
+        return num_cor/total
+
     def infer(self, x, thresh=0.5) :
         # x : (time, input_size)
         return 1*(torch.tensor(list(self(x)[1].values())) >= thresh)
@@ -149,7 +161,7 @@ class RecurrentPerceptron :
         self.V + self.W[4] + self.W[-4] >= thresh,
         self.V + self.W[4] + self.W[-1] >= thresh
         ]
-        return sum(conditions) == len(conditions)
+        return sum(conditions), len(conditions)
 
 
     def save_model(self, path='', name='model.pkl') :
