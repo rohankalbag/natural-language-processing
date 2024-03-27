@@ -129,6 +129,29 @@ class RecurrentPerceptron :
         # x : (time, input_size)
         return 1*(torch.tensor(list(self(x)[1].values())) >= thresh)
 
+    def check_conditions(self, thresh=0.5) :
+        # w = [w^, w_nn_prev, w_dt_prev, w_jj_prev, w_ot_prev, w_nn, w_dt, w_jj, w_ot]
+        conditions = [
+        self.W[0] + self.W[-3] >= thresh,
+        self.W[0] + self.W[-2] >= thresh,
+        self.W[0] + self.W[-4] >= thresh,
+        self.W[0] + self.W[-1] >= thresh,
+        self.V + self.W[2] + self.W[-2] <= thresh,
+        self.V + self.W[2] + self.W[-4] <= thresh,
+        self.W[3] + self.W[-2] <= thresh,
+        self.W[3] + self.W[-4] <= thresh,
+        self.V + self.W[3] + self.W[-2] <= thresh,
+        self.V + self.W[3] + self.W[-4] <= thresh,
+        self.W[1] + self.W[-1] >= thresh,
+        self.V + self.W[1] + self.W[-1] >= thresh,
+        self.V + self.W[4] + self.W[-3] >= thresh,
+        self.V + self.W[4] + self.W[-2] >= thresh,
+        self.V + self.W[4] + self.W[-4] >= thresh,
+        self.V + self.W[4] + self.W[-1] >= thresh
+        ]
+        return sum(conditions) == len(conditions)
+
+
     def save_model(self, path='', name='model.pkl') :
         if name[-4:]!='.pkl' : name += '.pkl'
         save_dir = os.path.join(path, name)
