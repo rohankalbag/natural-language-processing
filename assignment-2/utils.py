@@ -127,6 +127,10 @@ class RecurrentPerceptron :
 
     def test_from_dataloader(self, dataloader, verbose=True) :
         num_cor = 0
+        num_tp = 0
+        num_tn = 0
+        num_fn = 0
+        num_fp = 0
         total = 0
         for d in tqdm(dataloader, disable=not verbose) :
             for b in d:
@@ -134,8 +138,30 @@ class RecurrentPerceptron :
                 y = b["chunk_tags"]
                 op = self.infer(x)
                 num_cor += sum(torch.tensor(y)==op)
+                num_tn += sum((torch.tensor(y) == 0) & (op == 0)).item()
+                num_tp += sum((torch.tensor(y) == 1) & (op == 1)).item()
+                num_fn += sum((torch.tensor(y) == 1) & (op == 0)).item()
+                num_fp += sum((torch.tensor(y) == 0) & (op == 1)).item()
                 total += len(y)
-        return num_cor/total
+        
+        accuracy = (num_tp + num_tn) / (num_tp + num_tn + num_fp + num_fn)
+    
+        if num_tp + num_fp == 0:
+            precision = 0
+        else:
+            precision = num_tp / (num_tp + num_fp)
+
+        if num_tp + num_fn == 0:
+            recall = 0
+        else:
+            recall = num_tp / (num_tp + num_fn)
+
+        if precision + recall == 0:
+            f1 = 0
+        else:
+            f1 = 2 * (precision * recall) / (precision + recall)
+
+        return accuracy, precision, recall, f1
 
     def infer(self, x, thresh=0.5) :
         # x : (time, input_size)
