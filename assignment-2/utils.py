@@ -44,7 +44,7 @@ class RecurrentPerceptron :
         h[-1] = 0
         for t in range(len(x)) :
             a[t] = self.V*h[t-1] + sum(self.W*x[t])
-            o[t] = torch.sigmoid(a[t])  # assuming tanh activation for now
+            o[t] = torch.sigmoid(a[t]) 
             h[t] = o[t]
         return h, o
     def forward(self, x) :
@@ -52,16 +52,16 @@ class RecurrentPerceptron :
     def backward(self, x, h, o, y):
         # backward pass: compute gradients going backwards
         dw, dv, dh= torch.zeros_like(self.W), torch.zeros_like(self.V), 0
-        dhnext = torch.zeros_like(h[0])
-        niter = len(x) if self.seq_length==-1 else self.seq_length
+        dhnext = torch.zeros_like(h[0]) # intermediate grad
+        niter = len(x) if self.seq_length==-1 else self.seq_length # Number of time steps to backprop through
         for t in reversed(range(niter)):
-            do = (o[t]-y[t])/(o[t]*(1-o[t])) # derivative of loss 
+            do = (o[t]-y[t])/(o[t]*(1-o[t])) # derivative of loss : BCE
             dh += do + dhnext # backprop into h
             da = (1 - h[t]) * h[t] * dh # backprop through sigmoid non-linearity 
-            dw += da*x[t]
-            dv += da*h[t-1]
-            dhnext = self.V*da
-            if self.clip_grads : 
+            dw += da*x[t] # Since a[t] = V*h[t-1] + W*x[t]
+            dv += da*h[t-1] # Since a[t] = V*h[t-1] + W*x[t]
+            dhnext = self.V*da # the grad that flow backward through time
+            if self.clip_grads : # for numerical stability
                 dw = dw.clamp(-self.clip, self.clip) 
                 dv = dv.clamp(-self.clip, self.clip)
                 dh = dh.clamp(-self.clip, self.clip)
