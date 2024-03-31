@@ -222,13 +222,14 @@ class RecurrentPerceptron :
 
 
 class DataLoader:
-    def __init__(self, data, batch_size=32):
+    def __init__(self, data, batch_size=32, test = False):
         self.batch_size = batch_size
         self.data = data
         self.encoded_data = deepcopy(data)
         self.batch_size = batch_size
         self.pointer = 0
         self.data_size = len(data)
+        self.test = test
         
         self.curr_one_hot_encoding_mapping = {
             1: [1, 0, 0, 0],
@@ -260,8 +261,9 @@ class DataLoader:
                 self.encoded_data[i]["pos_tags"][j] = np.array(prev + curr)
         
         for i in self.encoded_data:
-            chunk_tags = np.array(i["chunk_tags"])
-            i["chunk_tags"] = chunk_tags
+            if not self.test:
+                chunk_tags = np.array(i["chunk_tags"])
+                i["chunk_tags"] = chunk_tags
             pos_tags = np.array(i["pos_tags"])
             pos_tags.reshape(1, pos_tags.shape[0], pos_tags.shape[1])
             i["pos_tags"] = pos_tags
