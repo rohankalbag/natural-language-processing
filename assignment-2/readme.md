@@ -25,9 +25,10 @@ A project by:-
 
 PDF of slides has been added in the folder.
 
-Dataloader_example.ipynb contains 
-utils.py contains
-ui.py contains the code for the UI
+Dataloader_example.ipynb contains code to load data, train model and test it, including 5 fold cross validation.
+
+utils.py contains the code for the recuurent perceptron along with forward pass and back propagation wit time implementation.
+ui.py contains the code for the UI.
 pos_tag.ipynb contains
 Analysis.ipynb contains
 example.ipynb contains
