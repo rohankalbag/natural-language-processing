@@ -23,7 +23,7 @@ A project by:-
 3) Amruta Parulekar : 20d070009  
 4) Keshav Singhal : 20d070047
 
-PDF of slides has been added in the folder.
+PDF of slides has been added in the folder as cs772-2024-assignment2.pdf
 
 Dataloader_example.ipynb contains code to load data, train model and test it, including 5 fold cross validation.
 
