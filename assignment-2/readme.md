@@ -27,14 +27,13 @@ PDF of slides has been added in the folder.
 
 Dataloader_example.ipynb contains code to load data, train model and test it, including 5 fold cross validation.
 
-utils.py contains the code for the recuurent perceptron along with forward pass and back propagation wit time implementation.
+utils.py contains the code for the recuurent perceptron along with forward pass, back propagation with time implementation and the training loop.
 
 ui.py contains the code for the UI.
 
-pos_tag.ipynb contains
+pos_tag.ipynb contains the code to use the NLTK toolkit to generate POS tags for a sentence input to the UI.
 
 Analysis.ipynb contains the printed error cases and their analysis (conclusions in PPT)
 
-example.ipynb contains
 Final trained model weights with best accuracy are in model_3000_10.pkl
 
