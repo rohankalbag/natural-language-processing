@@ -22,3 +22,14 @@ A project by:-
 2) Rohan Rajesh Kalbag : 20d170033  
 3) Amruta Parulekar : 20d070009  
 4) Keshav Singhal : 20d070047
+
+PDF of slides has been added in the folder.
+
+Dataloader_example.ipynb contains 
+utils.py contains
+ui.py contains the code for the UI
+pos_tag.ipynb contains
+Analysis.ipynb contains
+example.ipynb contains
+Final trained model weights with best accuracy are in model_3000_10.pkl
+
