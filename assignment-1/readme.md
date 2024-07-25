@@ -1,4 +1,6 @@
-## CS772 : Deep Learning for NLP : Assignment 1
+# Natively Implemented Fully Connected Neural Network for Palindrome Detection in Binary Strings
+
+## Assignment 1 - CS772 - Deep Learning for NLP
 
 This is our attempt at the first assignment of the course CS772.  
 
